@@ -16,7 +16,7 @@ from flask_socketio import SocketIO, emit
 
 # ─── App Setup ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "pushup-counter-secret"
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(16))
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.jinja_env.auto_reload = True
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
@@ -38,16 +38,6 @@ cap = None
 class PushupDetector:
     """Detects and counts pushups using MediaPipe Pose landmarks."""
 
-    # Speed presets: (down_angle, up_angle, label)
-    # Fast = more forgiving thresholds for quick reps
-    # Slow = stricter thresholds, expects full range of motion
-    SPEED_PRESETS = {
-        "slow":      {"down": 80,  "up": 170, "label": "Slow (strict form)"},
-        "normal":    {"down": 90,  "up": 160, "label": "Normal"},
-        "fast":      {"down": 105, "up": 145, "label": "Fast (quick reps)"},
-        "superfast": {"down": 120, "up": 140, "label": "Super Fast"},
-    }
-
     def __init__(self):
         self.pose = mp_pose.Pose(
             static_image_mode=False,
@@ -68,38 +58,24 @@ class PushupDetector:
         self.body_horizontal = False
         self.horiz_min = 150
         self.horiz_max = 210
-        self.leg_threshold = 135
-        self.down_op = "le"  # le = ≤, ge = ≥
+        self.leg_threshold = 100
+        self.down_op = "le"
         self.up_op = "ge"
         self.leg_op = "ge"
         self.body_detected = False
         self.start_time = None
         self.landmarks_data = None
-        self.speed = "normal"
         self.running_state = "stopped"  # stopped, running, paused
         
         # Speed limiter
-        self.cooldown_time = 0.25
+        self.cooldown_time = 0.3
         self.last_rep_time = 0.0
         
         self.body_confidence = 0.0
         
-        self._apply_speed("normal")
-
-    def _apply_speed(self, speed):
-        """Apply a speed preset's angle thresholds."""
-        preset = self.SPEED_PRESETS.get(speed, self.SPEED_PRESETS["normal"])
-        self.DOWN_ANGLE = preset["down"]
-        self.UP_ANGLE = preset["up"]
-        self.speed = speed
-
-    def set_speed(self, speed):
-        """Change speed preset. Returns True if valid."""
-        if speed in self.SPEED_PRESETS:
-            self._apply_speed(speed)
-            self.form_feedback = f"Speed set to {self.SPEED_PRESETS[speed]['label']}"
-            return True
-        return False
+        # Default initialization mimicking the base profile
+        self.DOWN_ANGLE = 80
+        self.UP_ANGLE = 82
 
     def _calculate_angle(self, a, b, c):
         """Calculate the angle at point b formed by points a, b, c."""
@@ -149,7 +125,9 @@ class PushupDetector:
         # Check against target bounding thresholds
         self.body_horizontal = self.horiz_min <= self.body_angle <= self.horiz_max
             
-        return self.body_horizontal if self.check_horizontal else True
+        if self.check_horizontal:
+            return self.body_horizontal and self.body_confidence >= 0.80
+        return True
 
     def process_frame(self, frame):
         """Process a frame and return annotated image + stats."""
@@ -311,7 +289,10 @@ class PushupDetector:
                 else:
                     self.form_feedback = "Keep your form steady" + leg_warning
             else:
-                self.form_feedback = "Align your body — get into plank position"
+                if self.check_horizontal and self.body_confidence < 0.80:
+                    self.form_feedback = f"Low body visibility ({int(self.body_confidence * 100)}%). Need 80%+ to count."
+                else:
+                    self.form_feedback = "Align your body — get into plank position"
 
             # Draw skeleton with custom styling
             self._draw_skeleton(annotated, results.pose_landmarks)
@@ -441,7 +422,6 @@ class PushupDetector:
             "horiz_min": getattr(self, "horiz_min", 150),
             "horiz_max": getattr(self, "horiz_max", 210),
             "elapsed_seconds": round(elapsed, 1),
-            "speed": self.speed,
             "down_threshold": self.DOWN_ANGLE,
             "up_threshold": self.UP_ANGLE,
             "leg_threshold": self.leg_threshold,
@@ -572,6 +552,7 @@ def eventlet_sleep(seconds):
 def index():
     """Serve the main HTML page."""
     import os
+import secrets
     html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
     with open(html_path, "r") as f:
         return Response(f.read(), mimetype="text/html")
@@ -626,14 +607,6 @@ def handle_reset():
     print("[WS] Counter reset")
 
 
-@socketio.on("set_speed")
-def handle_set_speed(data):
-    """Change pushup detection speed preset."""
-    speed = data.get("speed", "normal")
-    success = detector.set_speed(speed)
-    emit("stats_update", detector.get_stats())
-    print(f"[WS] Speed set to {speed}: {'OK' if success else 'INVALID'}")
-
 
 @socketio.on("set_running_state")
 def handle_running_state(data):
@@ -684,8 +657,7 @@ def handle_custom_thresholds(data):
         detector.horiz_min = int(data["horiz_min"])
     if "horiz_max" in data:
         detector.horiz_max = int(data["horiz_max"])
-        
-    detector.speed = "custom"
+
     emit("stats_update", detector.get_stats())
     print(f"[WS] Custom: down={detector.DOWN_ANGLE}({detector.down_op}), up={detector.UP_ANGLE}({detector.up_op}), leg={detector.leg_threshold}({detector.leg_op}), cooldown={detector.cooldown_time}s, horiz_range={detector.horiz_min}°-{detector.horiz_max}°")
 
