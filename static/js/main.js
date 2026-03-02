@@ -2,6 +2,7 @@
 let lastCount = 0;
 let socket;
 let audioCtx;
+let quickMode = 'plus'; // 'plus' or 'minus'
 
 // ── Ding Sound (Web Audio API) ──────────────────────────────
 function playDing() {
@@ -324,6 +325,25 @@ function resetCounter() {
 
 function adjustCount(delta) {
     socket.emit('adjust_count', { delta: delta });
+}
+
+function toggleQuickMode() {
+    quickMode = quickMode === 'plus' ? 'minus' : 'plus';
+    const btn = document.getElementById('quickModeToggle');
+    const row = btn.closest('.quick-adjust-row');
+    if (quickMode === 'minus') {
+        btn.textContent = '−';
+        btn.classList.add('minus-mode');
+        row.classList.add('minus');
+    } else {
+        btn.textContent = '+';
+        btn.classList.remove('minus-mode');
+        row.classList.remove('minus');
+    }
+}
+
+function quickAdjust(n) {
+    adjustCount(quickMode === 'plus' ? n : -n);
 }
 
 function setCustomCount() {

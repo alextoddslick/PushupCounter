@@ -596,6 +596,50 @@ def generate_frames():
         eventlet_sleep(0.01)
 
 
+def generate_pose_frames():
+    """Generator that yields MJPEG frames with only the skeleton on a black background."""
+    global cap
+
+    while True:
+        with camera_lock:
+            if cap is None or not cap.isOpened():
+                blank = np.zeros((720, 1280, 3), dtype=np.uint8)
+                _, buffer = cv2.imencode(".jpg", blank)
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n"
+                    + buffer.tobytes()
+                    + b"\r\n"
+                )
+                eventlet_sleep(0.1)
+                continue
+
+            success, frame = cap.read()
+
+        if not success:
+            eventlet_sleep(0.01)
+            continue
+
+        # Run MediaPipe on the real frame so landmarks are up-to-date,
+        # but draw only the skeleton onto a pure-black canvas.
+        h, w = frame.shape[:2]
+        black = np.zeros((h, w, 3), dtype=np.uint8)
+
+        if detector.running_state == "running" and detector.landmarks_data is not None:
+            detector._draw_skeleton(black, detector.landmarks_data)
+            detector._draw_unmet_criteria(black, detector.landmarks_data.landmark)
+
+        _, buffer = cv2.imencode(".jpg", black, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n"
+            + buffer.tobytes()
+            + b"\r\n"
+        )
+
+        eventlet_sleep(0.01)
+
+
 def eventlet_sleep(seconds):
     """Sleep that works with eventlet."""
     try:
@@ -619,6 +663,15 @@ def video_feed():
     """MJPEG video stream endpoint."""
     return Response(
         generate_frames(),
+        mimetype="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@app.route("/pose_feed")
+def pose_feed():
+    """MJPEG stream — skeleton only on black background."""
+    return Response(
+        generate_pose_frames(),
         mimetype="multipart/x-mixed-replace; boundary=frame",
     )
 

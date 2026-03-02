@@ -16,9 +16,55 @@
             font-family: 'Inter', -apple-system, sans-serif;
             color: white;
             display: flex;
-            align-items: flex-start;
+            align-items: stretch;
             justify-content: flex-start;
             padding: 20px;
+            gap: 12px;
+        }
+
+        .pose-preview {
+            background: rgba(15, 15, 20, 0.85);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 180px;
+            flex-shrink: 0;
+        }
+
+        .pose-preview-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .pose-preview-label .ai-dot {
+            width: 6px;
+            height: 6px;
+            background: #00ffcc;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #00ffcc;
+            animation: pulse 2s infinite;
+        }
+
+        .pose-preview img {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            object-fit: cover;
+            display: block;
         }
 
         .obs-widget {
@@ -113,6 +159,14 @@
 </head>
 
 <body>
+    <div class="pose-preview">
+        <div class="pose-preview-label">
+            <div class="ai-dot"></div>
+            AI Pose
+        </div>
+        <img id="poseFeed" src="" alt="Pose feed">
+    </div>
+
     <div class="obs-widget">
         <div class="widget-header">
             <div class="title-left">
@@ -131,6 +185,9 @@
         // Connect to the main stats socket on port 5000
         const socketURL = `http://${window.location.hostname}:5000`;
         const socket = io(socketURL);
+
+        // Point the pose preview at the skeleton-only feed on port 5000
+        document.getElementById('poseFeed').src = `${socketURL}/pose_feed`;
 
         const countEl = document.getElementById('obsCount');
         const stateEl = document.getElementById('obsState');

@@ -611,6 +611,78 @@
             box-shadow: 0 0 10px rgba(0, 255, 200, 0.15);
         }
 
+        /* ── Quick Adjust Row ──────────────────────────────────────── */
+        .quick-adjust-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .quick-mode-toggle {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 200, 0.4);
+            background: rgba(0, 255, 200, 0.1);
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .quick-mode-toggle:hover {
+            background: rgba(0, 255, 200, 0.2);
+        }
+
+        .quick-mode-toggle.minus-mode {
+            border-color: rgba(255, 68, 102, 0.5);
+            background: rgba(255, 68, 102, 0.12);
+            color: var(--danger);
+        }
+
+        .quick-mode-toggle.minus-mode:hover {
+            background: rgba(255, 68, 102, 0.22);
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 7px 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .quick-btn:hover {
+            border-color: rgba(0, 255, 200, 0.3);
+            background: rgba(0, 255, 200, 0.07);
+            color: var(--accent);
+        }
+
+        .minus-mode ~ .quick-btn,
+        .quick-adjust-row.minus .quick-btn {
+            border-color: rgba(255, 68, 102, 0.25);
+        }
+
+        .quick-adjust-row.minus .quick-btn:hover {
+            border-color: rgba(255, 68, 102, 0.5);
+            background: rgba(255, 68, 102, 0.1);
+            color: var(--danger);
+        }
+
         /* ── Stats Cards ───────────────────────────────────────────── */
         .stats-grid {
             display: grid;
