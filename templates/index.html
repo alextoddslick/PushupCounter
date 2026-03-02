@@ -40,298 +40,302 @@
 
         <!-- ── Main Content ──────────────────────────────────────── -->
         <main class="main-content">
-            <!-- Video Panel -->
-            <div class="video-panel">
-                <div class="video-container" id="videoContainer">
-                    <img id="videoFeed" src="/video_feed" alt="Live camera feed with pose overlay">
-                    <div class="video-placeholder" id="videoPlaceholder" style="display: none;">
-                        <div class="video-placeholder-icon">📷</div>
-                        <p>Connecting to camera...</p>
-                    </div>
+
+            <!-- ── Left Panel: Controls & User Specifics ──────────────── -->
+            <aside class="left-panel">
+                <!-- Counter Card -->
+                <div class="counter-card" style="margin-bottom: 20px;">
+                    <div class="counter-label">Pushups Completed</div>
+                    <div class="counter-value" id="pushupCount">0</div>
+                    <div class="counter-subtitle" id="counterSubtitle">Get in position to start</div>
                 </div>
-                <div class="video-status-bar">
-                    <div class="status-indicator">
-                        <span class="status-dot" id="statusDot"></span>
-                        <span id="statusText">Connecting...</span>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-label">State</div>
+                        <div class="stat-value" id="stateValue">—</div>
                     </div>
-                    <div class="status-indicator">
-                        <span class="live-tag">● LIVE</span>
-                    </div>
-                </div>
-                <!-- Live Angles Display -->
-                <div class="live-angles-row">
-                    <div class="live-angle-box" id="liveElbowBox">
-                        <span class="live-angle-label">Elbow Angle</span>
-                        <span class="live-angle-val" id="liveElbowVal">—°</span>
-                    </div>
-                    <div class="live-angle-box" id="liveLegBox">
-                        <span class="live-angle-label">Leg Angle</span>
-                        <span class="live-angle-val" id="liveLegVal">—°</span>
-                    </div>
-                    <!-- Add Confidence Here -->
-                    <div class="confidence-display" id="confidenceDisplay"
-                        style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; opacity: 0.3;">
-                        Human Confidence: <span id="confidenceVal"
-                            style="color: var(--accent); font-weight: bold;">—</span>%
+                    <div class="stat-card">
+                        <div class="stat-label">Time</div>
+                        <div class="stat-value" id="timeValue">0:00</div>
                     </div>
                 </div>
 
-                <!-- Side Panel -->
-                <aside class="side-panel">
-                    <!-- Counter Card -->
-                    <div class="counter-card">
-                        <div class="counter-label">Pushups Completed</div>
-                        <div class="counter-value" id="pushupCount">0</div>
-                        <div class="counter-subtitle" id="counterSubtitle">Get in position to start</div>
+                <!-- Playback Controls -->
+                <div class="playback-controls" style="margin-bottom: 20px;">
+                    <button class="playback-btn start" id="startBtn" onclick="setRunningState('running')">
+                        ▶ Start
+                    </button>
+                    <button class="playback-btn pause" id="pauseBtn" onclick="setRunningState('paused')">
+                        ⏸ Pause
+                    </button>
+                    <button class="playback-btn stop" id="stopBtn" onclick="setRunningState('stopped')">
+                        ⏹ Stop
+                    </button>
+                </div>
+
+                <!-- Actions -->
+                <div class="actions-row" style="margin-bottom: 24px;">
+                    <button class="btn btn-danger" id="resetBtn" onclick="resetCounter()">
+                        ↺ Reset
+                    </button>
+                </div>
+
+                <!-- Profile Selector -->
+                <div class="speed-selector">
+                    <div class="speed-label">👤 User Profiles</div>
+                    <div class="speed-buttons">
+                        <button class="speed-btn active" data-profile="profile1" onclick="setProfile('profile1')">
+                            <span class="speed-icon">👤</span> Profile 1
+                            <span class="profile-gear" onclick="toggleProfileSettings(event, 'profile1')">⚙️</span>
+                        </button>
+                        <button class="speed-btn" data-profile="profile2" onclick="setProfile('profile2')">
+                            <span class="speed-icon">👤</span> Profile 2
+                            <span class="profile-gear" onclick="toggleProfileSettings(event, 'profile2')">⚙️</span>
+                        </button>
+                        <button class="speed-btn" data-profile="profile3" onclick="setProfile('profile3')">
+                            <span class="speed-icon">👤</span> Profile 3
+                            <span class="profile-gear" onclick="toggleProfileSettings(event, 'profile3')">⚙️</span>
+                        </button>
+                    </div>
+                    <div class="threshold-info">
+                        <span>↓ Down: <strong id="downThreshold">90°</strong></span>
+                        <span>↑ Up: <strong id="upThreshold">160°</strong></span>
+                    </div>
+                </div>
+
+                <!-- Body Detection -->
+                <div class="detection-indicator" style="margin-top: 24px;">
+                    <div class="detection-ring" id="detectionRing">🦴</div>
+                    <div class="detection-info">
+                        <div class="detection-title" id="detectionTitle">Body Detection</div>
+                        <div class="detection-status" id="detectionStatus">Waiting...</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ── Center Panel: Main Video Feed & Status ────────────── -->
+            <section class="center-panel">
+                <!-- Video Panel -->
+                <div class="video-panel" style="margin-bottom: 20px;">
+                    <div class="video-container" id="videoContainer">
+                        <img id="videoFeed" src="/video_feed" alt="Live camera feed with pose overlay">
+                        <div class="video-placeholder" id="videoPlaceholder" style="display: none;">
+                            <div class="video-placeholder-icon">📷</div>
+                            <p>Connecting to camera...</p>
+                        </div>
+                    </div>
+                    <div class="video-status-bar">
+                        <div class="status-indicator">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span id="statusText">Connecting...</span>
+                        </div>
+                        <div class="status-indicator">
+                            <span class="live-tag">● LIVE</span>
+                        </div>
+                    </div>
+                    <!-- Live Angles Display -->
+                    <div class="live-angles-row">
+                        <div class="live-angle-box" id="liveElbowBox">
+                            <span class="live-angle-label">Elbow Angle</span>
+                            <span class="live-angle-val" id="liveElbowVal">—°</span>
+                        </div>
+                        <div class="live-angle-box" id="liveLegBox">
+                            <span class="live-angle-label">Leg Angle</span>
+                            <span class="live-angle-val" id="liveLegVal">—°</span>
+                        </div>
+                        <!-- Add Confidence Here -->
+                        <div class="confidence-display" id="confidenceDisplay"
+                            style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; opacity: 0.3;">
+                            Human Confidence: <span id="confidenceVal"
+                                style="color: var(--accent); font-weight: bold;">—</span>%
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ── Right Panel: Settings & Advanced Toggles ──────────── -->
+            <aside class="right-panel">
+
+                <!-- Form Feedback -->
+                <div class="feedback-card" id="feedbackCard" style="margin-bottom: 20px;">
+                    <div class="feedback-label">
+                        🧠 Form Feedback
+                    </div>
+                    <div class="feedback-text" id="feedbackText">
+                        Position yourself in front of the camera
+                    </div>
+                </div>
+
+                <!-- Profile Customization Panel (Hidden by default) -->
+                <div class="profile-settings-panel" id="profileSettingsPanel"
+                    style="display: none; margin-bottom: 20px;">
+                    <div class="settings-header">
+                        <div class="settings-title">⚙️ <span id="settingsProfileName">Profile 1</span> Settings</div>
+                        <button class="settings-close" onclick="toggleProfileSettings(null)">✕</button>
                     </div>
 
-                    <!-- Stats Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">State</div>
-                            <div class="stat-value" id="stateValue">—</div>
+                    <div class="slider-group">
+                        <div class="slider-row">
+                            <span class="slider-label">↓ Down Angle</span>
+                            <div class="slider-right">
+                                <button class="op-btn" id="opDown" onclick="toggleOp('down')">≤</button>
+                                <span class="slider-value" id="sliderDownVal">90°</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Time</div>
-                            <div class="stat-value" id="timeValue">0:00</div>
-                        </div>
-                    </div>
-
-                    <!-- Profile Selector -->
-                    <div class="speed-selector">
-                        <div class="speed-label">👤 User Profiles</div>
-                        <div class="speed-buttons">
-                            <button class="speed-btn active" data-profile="profile1" onclick="setProfile('profile1')">
-                                <span class="speed-icon">👤</span> Profile 1
-                            </button>
-                            <button class="speed-btn" data-profile="profile2" onclick="setProfile('profile2')">
-                                <span class="speed-icon">👤</span> Profile 2
-                            </button>
-                            <button class="speed-btn" data-profile="profile3" onclick="setProfile('profile3')">
-                                <span class="speed-icon">👤</span> Profile 3
-                            </button>
-                        </div>
-                        <div class="threshold-info">
-                            <span>↓ Down: <strong id="downThreshold">90°</strong></span>
-                            <span>↑ Up: <strong id="upThreshold">160°</strong></span>
+                        <input type="range" id="sliderDown" min="0" max="180" value="90" oninput="onSliderChange(this)">
+                        <div class="range-bar-wrap">
+                            <div class="range-bar" id="rangeBarDown"></div>
+                            <div class="range-labels"><span>0°</span><span>180°</span></div>
                         </div>
                     </div>
 
-                    <!-- Custom Sliders -->
-                    <div class="custom-sliders">
-                        <div class="slider-header">⚙️ Profile Settings</div>
-                        <div class="slider-group">
-                            <div class="slider-row">
-                                <span class="slider-label">↓ Down Angle</span>
-                                <div class="slider-right">
-                                    <button class="op-btn" id="opDown" onclick="toggleOp('down')">≤</button>
-                                    <span class="slider-value" id="sliderDownVal">90°</span>
+                    <div class="slider-group">
+                        <div class="slider-row">
+                            <span class="slider-label">↑ Up Angle</span>
+                            <div class="slider-right">
+                                <button class="op-btn" id="opUp" onclick="toggleOp('up')">≥</button>
+                                <span class="slider-value" id="sliderUpVal">160°</span>
+                            </div>
+                        </div>
+                        <input type="range" id="sliderUp" min="0" max="180" value="160" oninput="onSliderChange(this)">
+                        <div class="range-bar-wrap">
+                            <div class="range-bar" id="rangeBarUp"></div>
+                            <div class="range-labels"><span>0°</span><span>180°</span></div>
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-row">
+                            <span class="slider-label">🦵 Leg Angle</span>
+                            <div class="slider-right">
+                                <button class="op-btn" id="opLeg" onclick="toggleOp('leg')">≥</button>
+                                <span class="slider-value" id="sliderLegVal">150°</span>
+                            </div>
+                        </div>
+                        <input type="range" id="sliderLeg" min="60" max="180" value="150"
+                            oninput="onSliderChange(this)">
+                        <div class="range-bar-wrap">
+                            <div class="range-bar" id="rangeBarLeg"></div>
+                            <div class="range-labels"><span>60°</span><span>180°</span></div>
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-row">
+                            <span class="slider-label">⏱ Cooldown (s)</span>
+                            <span class="slider-value" id="sliderCooldownVal">0.3s</span>
+                        </div>
+                        <input type="range" id="sliderCooldown" min="0" max="2" step="0.1" value="0.3"
+                            oninput="onSliderChange(this)">
+                    </div>
+                </div>
+
+                <!-- Leg Straightness Toggle -->
+                <div class="toggle-card">
+                    <div class="toggle-left">
+                        <div class="toggle-title">🦵 Leg Straightness</div>
+                        <div class="toggle-subtitle" id="legSubtitle">Check form is correct</div>
+                        <div class="leg-angle-display" id="legAngleDisplay"></div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="legCheckToggle" checked onchange="toggleLegCheck(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Horizontal Alignment Toggle -->
+                <div class="toggle-card" style="flex-direction: column; align-items: stretch; margin-top: 12px;">
+                    <div class="toggle-header"
+                        style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="toggle-left"
+                            style="display: flex; align-items: center; gap: 12px; flex-direction: row;">
+                            <div class="attitude-indicator"
+                                style="width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; flex-shrink: 0; opacity: 0.3; transition: opacity 0.3s;"
+                                id="horizonContainer">
+                                <div id="horizonBg"
+                                    style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to bottom, #4fc3f7 50%, #8d6e63 50%); transform: rotate(0deg); transition: transform 0.1s ease-out;">
+                                </div>
+                                <div
+                                    style="position: absolute; top: 50%; left: 4px; right: 4px; height: 1.5px; background: rgba(255,255,255,0.9); z-index: 2; transform: translateY(-50%); box-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                </div>
+                                <div
+                                    style="position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #ff9800; border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; box-shadow: 0 1px 2px rgba(0,0,0,0.5);">
                                 </div>
                             </div>
-                            <input type="range" id="sliderDown" min="0" max="180" value="90" oninput="onSliderChange()">
-                            <div class="range-bar-wrap">
-                                <div class="range-bar" id="rangeBarDown"></div>
-                                <div class="range-labels"><span>0°</span><span>180°</span></div>
-                            </div>
-                        </div>
-                        <div class="slider-group">
-                            <div class="slider-row">
-                                <span class="slider-label">↑ Up Angle</span>
-                                <div class="slider-right">
-                                    <button class="op-btn" id="opUp" onclick="toggleOp('up')">≥</button>
-                                    <span class="slider-value" id="sliderUpVal">160°</span>
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div class="toggle-title">📏 Horizontal Body</div>
+                                <div class="toggle-subtitle" id="horizontalSubtitle">Ensure level pushup position
                                 </div>
                             </div>
-                            <input type="range" id="sliderUp" min="0" max="180" value="160" oninput="onSliderChange()">
-                            <div class="range-bar-wrap">
-                                <div class="range-bar" id="rangeBarUp"></div>
-                                <div class="range-labels"><span>0°</span><span>180°</span></div>
-                            </div>
-                        </div>
-                        <div class="slider-group">
-                            <div class="slider-row">
-                                <span class="slider-label">🦵 Leg Angle</span>
-                                <div class="slider-right">
-                                    <button class="op-btn" id="opLeg" onclick="toggleOp('leg')">≥</button>
-                                    <span class="slider-value" id="sliderLegVal">110°</span>
-                                </div>
-                            </div>
-                            <input type="range" id="sliderLeg" min="60" max="180" value="110"
-                                oninput="onSliderChange()">
-                            <div class="range-bar-wrap">
-                                <div class="range-bar" id="rangeBarLeg"></div>
-                                <div class="range-labels"><span>0°</span><span>180°</span></div>
-                            </div>
-                        </div>
-                        <div class="slider-group"
-                            style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
-                            <div class="slider-row">
-                                <span class="slider-label">⏱ Rep Cooldown</span>
-                                <div class="slider-right">
-                                    <span class="slider-value" id="sliderCooldownVal">0.25s</span>
-                                </div>
-                            </div>
-                            <input type="range" id="sliderCooldown" min="0" max="2.0" step="0.05" value="0.25"
-                                oninput="onSliderChange()">
-                        </div>
-                    </div>
-
-                    <!-- Angle Meter -->
-                    <div class="angle-meter">
-                        <div class="angle-label">Elbow Angle</div>
-                        <div class="angle-value-display" id="angleDisplay">—°</div>
-                        <div class="angle-bar-wrapper">
-                            <div class="angle-bar" id="angleBar"></div>
-                        </div>
-                        <div class="angle-markers">
-                            <span>0°</span>
-                            <span>90°</span>
-                            <span>180°</span>
-                        </div>
-                    </div>
-
-                    <!-- Body Detection -->
-                    <div class="detection-indicator">
-                        <div class="detection-ring" id="detectionRing">🦴</div>
-                        <div class="detection-info">
-                            <div class="detection-title" id="detectionTitle">Body Detection</div>
-                            <div class="detection-status" id="detectionStatus">Waiting...</div>
-                        </div>
-                    </div>
-
-                    <!-- Feedback -->
-                    <div class="feedback-card">
-                        <div class="feedback-label">
-                            🧠 Form Feedback
-                        </div>
-                        <div class="feedback-text" id="feedbackText">
-                            Position yourself in front of the camera
-                        </div>
-                    </div>
-
-                    <!-- Leg Straightness Toggle -->
-                    <div class="toggle-card">
-                        <div class="toggle-left">
-                            <div class="toggle-title">🦵 Leg Straightness</div>
-                            <div class="toggle-subtitle" id="legSubtitle">Check form is correct</div>
-                            <div class="leg-angle-display" id="legAngleDisplay"></div>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox" id="legCheckToggle" checked onchange="toggleLegCheck(this.checked)">
+                            <input type="checkbox" id="horizontalCheckToggle"
+                                onchange="toggleHorizontalCheck(this.checked)">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
 
-                    <!-- Horizontal Alignment Toggle -->
-                    <div class="toggle-card" style="flex-direction: column; align-items: stretch; margin-top: 12px;">
-                        <div class="toggle-header"
-                            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div class="toggle-left"
-                                style="display: flex; align-items: center; gap: 12px; flex-direction: row;">
-                                <div class="attitude-indicator"
-                                    style="width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; flex-shrink: 0; opacity: 0.3; transition: opacity 0.3s;"
-                                    id="horizonContainer">
-                                    <div id="horizonBg"
-                                        style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to bottom, #4fc3f7 50%, #8d6e63 50%); transform: rotate(0deg); transition: transform 0.1s ease-out;">
-                                    </div>
-                                    <div
-                                        style="position: absolute; top: 50%; left: 4px; right: 4px; height: 1.5px; background: rgba(255,255,255,0.9); z-index: 2; transform: translateY(-50%); box-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                                    </div>
-                                    <div
-                                        style="position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #ff9800; border-radius: 50%; transform: translate(-50%, -50%); z-index: 3; box-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                                    </div>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <div class="toggle-title">📏 Horizontal Body</div>
-                                    <div class="toggle-subtitle" id="horizontalSubtitle">Ensure level pushup position
-                                    </div>
-                                </div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="horizontalCheckToggle"
-                                    onchange="toggleHorizontalCheck(this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
+                    <!-- Internal Config Sliders (only active if checked) -->
+                    <div class="horizontal-config" id="horizontalConfigGrp"
+                        style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center;">
+
+                        <div
+                            style="font-size: 11px; text-align: center; margin-bottom: 8px; color: rgba(255,255,255,0.7);">
+                            Set acceptable pitch angles (degrees)
                         </div>
 
-                        <!-- Internal Config Sliders (only active if checked) -->
-                        <div class="horizontal-config" id="horizontalConfigGrp"
-                            style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center;">
-
-                            <div
-                                style="font-size: 11px; text-align: center; margin-bottom: 8px; color: rgba(255,255,255,0.7);">
-                                Set acceptable pitch angles (degrees)
+                        <div
+                            style="display: flex; gap: 10px; margin-top: 10px; align-items: center; justify-content: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <label for="sliderHorizMin"
+                                    style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Min</label>
+                                <input type="number" id="sliderHorizMin" value="125"
+                                    style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center;"
+                                    onchange="onSliderChange()">
                             </div>
-
-                            <div
-                                style="display: flex; gap: 10px; margin-top: 10px; align-items: center; justify-content: center;">
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <label for="sliderHorizMin"
-                                        style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Min</label>
-                                    <input type="number" id="sliderHorizMin" value="125"
-                                        style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center;"
-                                        onchange="onSliderChange()">
-                                </div>
-                                <span
-                                    style="color: rgba(255,255,255,0.5); font-weight: bold; margin-top: 16px;">-</span>
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <label for="sliderHorizMax"
-                                        style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Max</label>
-                                    <input type="number" id="sliderHorizMax" value="235"
-                                        style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center;"
-                                        onchange="onSliderChange()">
-                                </div>
+                            <span style="color: rgba(255,255,255,0.5); font-weight: bold; margin-top: 16px;">-</span>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <label for="sliderHorizMax"
+                                    style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Max</label>
+                                <input type="number" id="sliderHorizMax" value="235"
+                                    style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center;"
+                                    onchange="onSliderChange()">
                             </div>
-
-
-                            <style>
-                                /* Basic styling for dual handles */
-                                .dual-range-input::-webkit-slider-thumb {
-                                    pointer-events: auto;
-                                    -webkit-appearance: none;
-                                    width: 16px;
-                                    height: 16px;
-                                    border-radius: 50%;
-                                    background: var(--accent);
-                                    border: 2px solid white;
-                                    cursor: pointer;
-                                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-                                }
-
-                                .dual-range-input::-moz-range-thumb {
-                                    pointer-events: auto;
-                                    width: 16px;
-                                    height: 16px;
-                                    border-radius: 50%;
-                                    background: var(--accent);
-                                    border: 2px solid white;
-                                    cursor: pointer;
-                                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-                                }
-                            </style>
                         </div>
-                    </div>
 
-                    <!-- Playback Controls -->
-                    <div class="playback-controls">
-                        <button class="playback-btn start" id="startBtn" onclick="setRunningState('running')">
-                            ▶ Start
-                        </button>
-                        <button class="playback-btn pause" id="pauseBtn" onclick="setRunningState('paused')">
-                            ⏸ Pause
-                        </button>
-                        <button class="playback-btn stop" id="stopBtn" onclick="setRunningState('stopped')">
-                            ⏹ Stop
-                        </button>
-                    </div>
 
-                    <!-- Actions -->
-                    <div class="actions-row">
-                        <button class="btn btn-danger" id="resetBtn" onclick="resetCounter()">
-                            ↺ Reset
-                        </button>
+                        <style>
+                            /* Basic styling for dual handles */
+                            .dual-range-input::-webkit-slider-thumb {
+                                pointer-events: auto;
+                                -webkit-appearance: none;
+                                width: 16px;
+                                height: 16px;
+                                border-radius: 50%;
+                                background: var(--accent);
+                                border: 2px solid white;
+                                cursor: pointer;
+                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                            }
+
+                            .dual-range-input::-moz-range-thumb {
+                                pointer-events: auto;
+                                width: 16px;
+                                height: 16px;
+                                border-radius: 50%;
+                                background: var(--accent);
+                                border: 2px solid white;
+                                cursor: pointer;
+                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                            }
+                        </style>
                     </div>
-                </aside>
+                </div>
+
+            </aside>
         </main>
     </div>
 

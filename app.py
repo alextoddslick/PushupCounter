@@ -13,6 +13,8 @@ import time
 import threading
 from flask import Flask, render_template, Response, jsonify, request, send_file
 from flask_socketio import SocketIO, emit
+import os
+import secrets
 
 # ─── App Setup ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -551,11 +553,7 @@ def eventlet_sleep(seconds):
 @app.route("/")
 def index():
     """Serve the main HTML page."""
-    import os
-import secrets
-    html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
-    with open(html_path, "r") as f:
-        return Response(f.read(), mimetype="text/html")
+    return render_template("index.html")
 
 
 @app.route("/video_feed")
@@ -662,12 +660,31 @@ def handle_custom_thresholds(data):
     print(f"[WS] Custom: down={detector.DOWN_ANGLE}({detector.down_op}), up={detector.UP_ANGLE}({detector.up_op}), leg={detector.leg_threshold}({detector.leg_op}), cooldown={detector.cooldown_time}s, horiz_range={detector.horiz_min}°-{detector.horiz_max}°")
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# OBS App Setup
+# ═══════════════════════════════════════════════════════════════════════════════
+obs_app = Flask("obs_counter")
+
+@obs_app.route("/")
+def obs_index():
+    return render_template("obs.html")
+
+def run_obs_server():
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    obs_app.run(host="0.0.0.0", port=5001, debug=False, use_reloader=False)
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     print("=" * 60)
     print("  PUSHUP COUNTER — MediaPipe + Flask")
     print("=" * 60)
+
+    # Start OBS server thread
+    obs_thread = threading.Thread(target=run_obs_server, daemon=True)
+    obs_thread.start()
 
     # List available cameras
     cameras = get_available_cameras()
@@ -683,6 +700,7 @@ if __name__ == "__main__":
         print("\n⚠️   No cameras found! Connect a camera and restart.")
 
     print(f"\n🌐  Open http://localhost:5000 in your browser")
+    print(f"🎥  OBS Source URL: http://localhost:5001")
     print("=" * 60)
 
     socketio.run(app, host="0.0.0.0", port=5000, debug=False)

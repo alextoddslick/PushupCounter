@@ -129,7 +129,23 @@ function updateUI(data) {
     }
 
     // Feedback
-    document.getElementById('feedbackText').textContent = data.form_feedback;
+    const feedbackText = data.form_feedback || 'Position yourself in front of the camera';
+    document.getElementById('feedbackText').textContent = feedbackText;
+
+    // Apply glow effect
+    const feedbackCard = document.getElementById('feedbackCard');
+    if (feedbackCard) {
+        feedbackCard.className = 'feedback-card'; // reset classes
+        const t = feedbackText.toLowerCase();
+
+        if (t.includes('good') || t.includes('great') || t.includes('hold')) {
+            feedbackCard.classList.add('glow-success');
+        } else if (t.includes('counted') || t.includes('fast') || t.includes('straighten')) {
+            feedbackCard.classList.add('glow-danger');
+        } else if (t.includes('ready') || t.includes('steady') || t.includes('visibility') || t.includes('plank') || t.includes('step') || t.includes('get into')) {
+            feedbackCard.classList.add('glow-warning');
+        }
+    }
 
     // Subtitle
     const subtitle = document.getElementById('counterSubtitle');
@@ -397,6 +413,7 @@ const DEFAULT_PROFILE = {
 };
 
 function setProfile(profileId) {
+    if (!profileId) return;
     window._currentProfile = profileId;
 
     // Update UI active state immediately
@@ -407,26 +424,44 @@ function setProfile(profileId) {
     const saved = localStorage.getItem('pushup_' + profileId);
     const v = saved ? JSON.parse(saved) : DEFAULT_PROFILE;
 
-    document.getElementById('sliderDown').value = v.down;
-    document.getElementById('sliderUp').value = v.up;
-    document.getElementById('sliderLeg').value = v.leg;
-    if (v.cooldown !== undefined) document.getElementById('sliderCooldown').value = v.cooldown;
-    if (v.horiz_min !== undefined) document.getElementById('sliderHorizMin').value = v.horiz_min;
-    if (v.horiz_max !== undefined) document.getElementById('sliderHorizMax').value = v.horiz_max;
+    if (document.getElementById('sliderDown')) document.getElementById('sliderDown').value = v.down;
+    if (document.getElementById('sliderUp')) document.getElementById('sliderUp').value = v.up;
+    if (document.getElementById('sliderLeg')) document.getElementById('sliderLeg').value = v.leg;
+    if (v.cooldown !== undefined && document.getElementById('sliderCooldown')) document.getElementById('sliderCooldown').value = v.cooldown;
+    if (v.horiz_min !== undefined && document.getElementById('sliderHorizMin')) document.getElementById('sliderHorizMin').value = v.horiz_min;
+    if (v.horiz_max !== undefined && document.getElementById('sliderHorizMax')) document.getElementById('sliderHorizMax').value = v.horiz_max;
 
-    document.getElementById('sliderDownVal').textContent = v.down + '°';
-    document.getElementById('sliderUpVal').textContent = v.up + '°';
-    document.getElementById('sliderLegVal').textContent = v.leg + '°';
-    if (v.cooldown !== undefined) document.getElementById('sliderCooldownVal').textContent = v.cooldown + 's';
+    if (document.getElementById('sliderDownVal')) document.getElementById('sliderDownVal').textContent = v.down + '°';
+    if (document.getElementById('sliderUpVal')) document.getElementById('sliderUpVal').textContent = v.up + '°';
+    if (document.getElementById('sliderLegVal')) document.getElementById('sliderLegVal').textContent = v.leg + '°';
+    if (v.cooldown !== undefined && document.getElementById('sliderCooldownVal')) document.getElementById('sliderCooldownVal').textContent = v.cooldown + 's';
 
-    document.getElementById('opDown').textContent = v.down_op === 'le' ? '≤' : '≥';
-    document.getElementById('opUp').textContent = v.up_op === 'ge' ? '≥' : '≤';
-    document.getElementById('opLeg').textContent = v.leg_op === 'ge' ? '≥' : '≤';
+    if (document.getElementById('opDown')) document.getElementById('opDown').textContent = v.down_op === 'le' ? '≤' : '≥';
+    if (document.getElementById('opUp')) document.getElementById('opUp').textContent = v.up_op === 'ge' ? '≥' : '≤';
+    if (document.getElementById('opLeg')) document.getElementById('opLeg').textContent = v.leg_op === 'ge' ? '≥' : '≤';
 
     updateRangeBars();
 
     // Emit changes back to backend via existing custom payload
     onSliderChange();
+}
+
+function toggleProfileSettings(event, profileId) {
+    if (event) event.stopPropagation(); // Don't trigger setProfile when clicking gear
+
+    const panel = document.getElementById('profileSettingsPanel');
+    const nameSpan = document.getElementById('settingsProfileName');
+
+    if (!profileId || (panel.style.display === 'block' && window._settingsProfile === profileId)) {
+        panel.style.display = 'none';
+        window._settingsProfile = null;
+    } else {
+        window._settingsProfile = profileId;
+        nameSpan.textContent = profileId.charAt(0).toUpperCase() + profileId.slice(1);
+        panel.style.display = 'block';
+        // Ensure values are correct for THIS profile being edited
+        setProfile(profileId);
+    }
 }
 
 function toggleOp(which) {

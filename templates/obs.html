@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>OBS Pushup Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body {
+            background-color: transparent !important;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: white;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        .obs-widget {
+            background: rgba(15, 15, 20, 0.85);
+            border-radius: 16px;
+            padding: 20px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            font-size: 13px;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+        }
+
+        .red-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ff3344;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff3344;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .state-badge {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .count-display {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .count-number {
+            font-size: 84px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .count-label {
+            font-size: 18px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="obs-widget">
+        <div class="widget-header">
+            <div class="title-left">
+                <div class="red-dot"></div>
+                PUSHUPS
+            </div>
+            <div class="state-badge" id="obsState">READY</div>
+        </div>
+        <div class="count-display">
+            <div class="count-number" id="obsCount">0</div>
+            <div class="count-label">REPS</div>
+        </div>
+    </div>
+
+    <script>
+        // Connect to the main stats socket on port 5000
+        const socketURL = `http://${window.location.hostname}:5000`;
+        const socket = io(socketURL);
+
+        const countEl = document.getElementById('obsCount');
+        const stateEl = document.getElementById('obsState');
+        let lastCount = 0;
+
+        socket.on('connect', () => {
+            console.log('Connected to main server:', socketURL);
+            stateEl.textContent = 'READY';
+        });
+
+        socket.on('disconnect', () => {
+            stateEl.textContent = 'OFFLINE';
+        });
+
+        socket.on('stats_update', (data) => {
+            if (data.count !== lastCount) {
+                countEl.textContent = data.count;
+
+                // Bump animation
+                countEl.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    countEl.style.transform = 'scale(1)';
+                }, 150);
+
+                lastCount = data.count;
+            }
+
+            // Update state badge based on form
+            if (data.state === 'UP') {
+                stateEl.textContent = 'READY';
+                stateEl.style.color = 'rgba(255, 255, 255, 0.9)';
+            } else if (data.state === 'DOWN') {
+                stateEl.textContent = 'HOLD';
+                stateEl.style.color = '#ff9900';
+            }
+        });
+    </script>
+</body>
+
+</html>
