@@ -11,10 +11,69 @@ import mediapipe as mp
 import math
 import time
 import threading
+import platform
 from flask import Flask, render_template, Response, jsonify, request, send_file
 from flask_socketio import SocketIO, emit
 import os
 import secrets
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# macOS Camera Permission
+# ═══════════════════════════════════════════════════════════════════════════════
+def _get_av_capture_device():
+    """Load AVCaptureDevice class via pyobjc (macOS only)."""
+    try:
+        import objc
+        from Foundation import NSBundle
+        bundle = NSBundle.bundleWithPath_(
+            '/System/Library/Frameworks/AVFoundation.framework'
+        )
+        bundle.load()
+        return objc.lookUpClass('AVCaptureDevice')
+    except Exception:
+        return None
+
+
+def get_camera_permission_status():
+    """Return 'authorized', 'denied', 'not_determined', or 'unavailable'."""
+    if platform.system() != 'Darwin':
+        return 'authorized'
+    cls = _get_av_capture_device()
+    if cls is None:
+        return 'unavailable'
+    code = cls.authorizationStatusForMediaType_('vide')
+    return {0: 'not_determined', 1: 'restricted', 2: 'denied', 3: 'authorized'}.get(code, 'unavailable')
+
+
+def request_camera_permission():
+    """Trigger the macOS camera permission dialog if needed. Returns True if granted."""
+    if platform.system() != 'Darwin':
+        return True
+    status = get_camera_permission_status()
+    if status == 'authorized':
+        return True
+    if status == 'not_determined':
+        cls = _get_av_capture_device()
+        if cls is None:
+            return True
+        done = threading.Event()
+        result = [False]
+
+        def handler(granted):
+            result[0] = bool(granted)
+            done.set()
+
+        cls.requestAccessForMediaType_completionHandler_('vide', handler)
+        done.wait(timeout=30)
+        if result[0]:
+            print("[Camera] Permission granted ✅")
+        else:
+            print("[Camera] Permission denied ❌")
+        return result[0]
+    # denied or restricted
+    print(f"[Camera] Permission status: {status} — user must enable in System Settings")
+    return False
+
 
 # ─── App Setup ──────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -452,13 +511,12 @@ detector = PushupDetector()
 # ═══════════════════════════════════════════════════════════════════════════════
 # Camera Management
 # ═══════════════════════════════════════════════════════════════════════════════
-def get_available_cameras(max_cameras=10):
+def get_available_cameras(max_cameras=5):
     """Enumerate available cameras on the system."""
     cameras = []
     for i in range(max_cameras):
         test_cap = cv2.VideoCapture(i)
         if test_cap.isOpened():
-            # Try to get camera name (not always available via OpenCV)
             w = int(test_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(test_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             cameras.append({
@@ -578,6 +636,12 @@ def get_stats():
     return jsonify(detector.get_stats())
 
 
+@app.route("/camera-permission")
+def camera_permission():
+    """Return current macOS camera permission status."""
+    return jsonify({"status": get_camera_permission_status()})
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # WebSocket Events
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -603,6 +667,24 @@ def handle_reset():
     detector.reset()
     emit("stats_update", detector.get_stats())
     print("[WS] Counter reset")
+
+
+@socketio.on("adjust_count")
+def handle_adjust_count(data):
+    """Manually increment or decrement the pushup count."""
+    delta = int(data.get("delta", 0))
+    detector.count = max(0, detector.count + delta)
+    emit("stats_update", detector.get_stats())
+    print(f"[WS] Count adjusted by {delta:+d} → {detector.count}")
+
+
+@socketio.on("set_count")
+def handle_set_count(data):
+    """Manually set the pushup count to a specific value."""
+    value = int(data.get("value", 0))
+    detector.count = max(0, value)
+    emit("stats_update", detector.get_stats())
+    print(f"[WS] Count set to {detector.count}")
 
 
 
@@ -685,6 +767,12 @@ if __name__ == "__main__":
     # Start OBS server thread
     obs_thread = threading.Thread(target=run_obs_server, daemon=True)
     obs_thread.start()
+
+    # Request camera permission (macOS: triggers system dialog if needed)
+    print("\n🔐  Checking camera permissions...")
+    permission_granted = request_camera_permission()
+    if not permission_granted:
+        print("⚠️   Camera permission denied. Enable it in System Settings → Privacy & Security → Camera")
 
     # List available cameras
     cameras = get_available_cameras()

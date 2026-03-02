@@ -515,6 +515,102 @@
             margin-top: 8px;
         }
 
+        /* ── Manual Count Controls ─────────────────────────────────── */
+        .manual-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .manual-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .manual-btn.minus:hover {
+            background: rgba(255, 68, 102, 0.15);
+            border-color: rgba(255, 68, 102, 0.5);
+            color: var(--danger);
+        }
+
+        .manual-btn.plus:hover {
+            background: rgba(0, 255, 200, 0.12);
+            border-color: var(--border-accent);
+            color: var(--accent);
+        }
+
+        .manual-set {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .custom-count-input {
+            width: 72px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-count-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .custom-count-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        /* hide number input arrows */
+        .custom-count-input::-webkit-inner-spin-button,
+        .custom-count-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .manual-set-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-accent);
+            background: rgba(0, 255, 200, 0.08);
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .manual-set-btn:hover {
+            background: rgba(0, 255, 200, 0.18);
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.15);
+        }
+
         /* ── Stats Cards ───────────────────────────────────────────── */
         .stats-grid {
             display: grid;

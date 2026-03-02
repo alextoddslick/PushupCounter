@@ -16,6 +16,19 @@
 </head>
 
 <body>
+    <!-- Camera Permission Banner -->
+    <div id="permissionBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:2000;
+         background:rgba(255,68,102,0.95); color:#fff; padding:14px 24px;
+         display:none; align-items:center; justify-content:space-between; gap:16px;
+         font-size:14px; font-weight:500; backdrop-filter:blur(8px);">
+        <span>📷 Camera access is denied. Go to <strong>System Settings → Privacy & Security → Camera</strong> and enable access for your terminal app, then restart.</span>
+        <button onclick="document.getElementById('permissionBanner').style.display='none'"
+            style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4);
+                   color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px; white-space:nowrap;">
+            Dismiss
+        </button>
+    </div>
+
     <div class="app-container">
         <!-- ── Header ────────────────────────────────────────────── -->
         <header class="header">
@@ -48,6 +61,15 @@
                     <div class="counter-label">Pushups Completed</div>
                     <div class="counter-value" id="pushupCount">0</div>
                     <div class="counter-subtitle" id="counterSubtitle">Get in position to start</div>
+                    <!-- Manual Adjustment Controls -->
+                    <div class="manual-controls">
+                        <button class="manual-btn minus" onclick="adjustCount(-1)">−</button>
+                        <div class="manual-set">
+                            <input type="number" id="customCountInput" class="custom-count-input" min="0" placeholder="0">
+                            <button class="manual-set-btn" onclick="setCustomCount()">Set</button>
+                        </div>
+                        <button class="manual-btn plus" onclick="adjustCount(1)">+</button>
+                    </div>
                 </div>
 
                 <!-- Stats Grid -->

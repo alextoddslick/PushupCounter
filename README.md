@@ -22,6 +22,15 @@ Before getting started, make sure you have the following installed on your syste
 - Python 3.8+
 - [pip](https://pip.pypa.io/en/stable/installation/)
 
+### macOS: Grant Camera Access to Terminal
+
+On macOS, the camera is accessed by the terminal application running the server (e.g., Terminal, iTerm2). You must grant it camera permission before the app will work:
+
+1. Open **System Settings** → **Privacy & Security** → **Camera**
+2. Scroll down and enable the toggle for your terminal app (e.g., **Terminal** or **iTerm**)
+3. If your terminal app does not appear in the list, try running `python3 app.py` first — macOS may prompt you automatically, or the app will appear in the list after the first access attempt
+4. Restart your terminal after granting permission
+
 ## Getting Started
 
 1. **Clone the repository:**

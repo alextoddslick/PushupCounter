@@ -70,12 +70,6 @@ function updateUI(data) {
     document.getElementById('timeValue').textContent =
         `${mins}:${secs.toString().padStart(2, '0')}`;
 
-    // Angle
-    const angle = data.elbow_angle;
-    document.getElementById('angleDisplay').textContent = `${angle}°`;
-    const pct = Math.min(100, (angle / 180) * 100);
-    document.getElementById('angleBar').style.width = `${pct}%`;
-
     // Body detection
     const ring = document.getElementById('detectionRing');
     const title = document.getElementById('detectionTitle');
@@ -93,13 +87,13 @@ function updateUI(data) {
         status.textContent = 'Tracking active';
 
         // Update live angles
-        if (data.angle !== undefined) {
-            elbowVal.textContent = data.angle + '°';
+        if (data.elbow_angle !== undefined) {
+            elbowVal.textContent = data.elbow_angle + '°';
             const targetAngle = data.state === 'UP' ? data.down_threshold : data.up_threshold;
             const op = data.state === 'UP' ? data.down_op : data.up_op;
             let good = false;
-            if (op === 'le') good = data.angle <= targetAngle;
-            else good = data.angle >= targetAngle;
+            if (op === 'le') good = data.elbow_angle <= targetAngle;
+            else good = data.elbow_angle >= targetAngle;
 
             elbowBox.className = 'live-angle-box ' + (good ? 'good' : 'bad');
         }
@@ -328,6 +322,19 @@ function resetCounter() {
     document.getElementById('counterSubtitle').textContent = 'Counter reset — go again!';
 }
 
+function adjustCount(delta) {
+    socket.emit('adjust_count', { delta: delta });
+}
+
+function setCustomCount() {
+    const input = document.getElementById('customCountInput');
+    const value = parseInt(input.value);
+    if (!isNaN(value) && value >= 0) {
+        socket.emit('set_count', { value: value });
+        input.value = '';
+    }
+}
+
 function setSpeed(speed) {
     socket.emit('set_speed', { speed: speed });
     // Immediate visual feedback
@@ -527,11 +534,25 @@ function setupVideoFeed() {
 }
 
 // ── Init ────────────────────────────────────────────────────
+async function checkCameraPermission() {
+    try {
+        const res = await fetch('/camera-permission');
+        const data = await res.json();
+        if (data.status === 'denied' || data.status === 'restricted') {
+            document.getElementById('permissionBanner').style.display = 'flex';
+        }
+    } catch (_) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initSocket();
     loadCameras();
     setupVideoFeed();
     setProfile('profile1');
     updateRangeBars();
+    checkCameraPermission();
 
+    document.getElementById('customCountInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') setCustomCount();
+    });
 });
